@@ -1,91 +1,91 @@
-import tkinter as tk
-import requests
-import json
-import webbrowser
 import os
+import tkinter as tk
+from tkinter import ttk
+from ttkthemes import ThemedStyle
+import requests
+import subprocess
+import platform
+from urllib.parse import unquote
 
-# Configurazione di Apache Solr
-solr_url = 'http://localhost:8983/solr'  # URL di Solr
-solr_core = 'test'  # Nome del core di Solr
+# Funzione per cercare documenti in Solr
+def search_documents(event):
+    query = query_entry.get()
 
-# Funzione per eseguire la ricerca con Solr
-def search_documents():
-    query = entry.get()  # Ottieni il testo di ricerca dalla casella di input
-    results = perform_solr_query(query)
+    solr_url = 'http://localhost:8983/solr'  # URL di Solr
+    solr_core = 'core'  # Nome del core di Solr
 
-    # Pulisci la lista dei risultati precedenti
-    result_listbox.delete(0, tk.END)
-
-    # Aggiungi i risultati alla lista
-    for result in results:
-        result_listbox.insert(tk.END, result['id'])
-
-# Funzione per eseguire la query Solr
-def perform_solr_query(query):
-    # URL per l'esecuzione della query
+    # URL per la ricerca
     url = f'{solr_url}/{solr_core}/select'
 
-    # Parametri della query
+    # Parametri della ricerca
     params = {
         'q': query,
-        'wt': 'json'
+        'rows': 10,
+        'fl': 'id,path'  # Campi da includere nella risposta
     }
 
     # Esegui la richiesta HTTP
     response = requests.get(url, params=params)
+    response_json = response.json()
 
-    if response.status_code == 200:
-        # Estrai i risultati dalla risposta JSON
-        data = json.loads(response.text)
-        results = data['response']['docs']
-        return results
-    else:
-        print(f"Errore durante l'esecuzione della query: {response.text}")
-        return []
+    # Estrai i risultati dalla risposta JSON
+    results = response_json['response']['docs']
 
-# Funzione per aprire il documento selezionato
-def open_document(event):
-    selected_document = result_listbox.get(result_listbox.curselection())
-    document_url = documents[selected_document]
-    webbrowser.open_new_tab(document_url)
+    # Aggiorna la tabella dei risultati
+    result_listbox.delete(*result_listbox.get_children())
+    for result in results:
+        title = os.path.basename(result['id'])  # Estrai solo il nome del file dall'ID
+        path = result['id']  # Utilizza il campo 'id' come percorso del file completo
+        result_listbox.insert('', 'end', values=(title, path))
 
-# Creazione della finestra dell'interfaccia grafica
+def open_file(event):
+    selection = result_listbox.selection()
+    if selection:
+        item = selection[0]
+        path = result_listbox.item(item, 'values')[1]
+        try:
+            subprocess.run(['open', path], check=True)  # Try to open the file with the default application
+        except subprocess.CalledProcessError:
+            folder_path = os.path.dirname(unquote(path))  # Get the folder path containing the file
+            try:
+                if platform.system() == 'Darwin':
+                    subprocess.run(['open', folder_path], check=True)  # Open the folder and highlight the file in Finder (macOS)
+                elif platform.system() == 'Windows':
+                    subprocess.run(['explorer', '/select,', os.path.normpath(folder_path)], check=True)  # Open the folder and select the file in File Explorer (Windows)
+                elif platform.system() == 'Linux':
+                    subprocess.run(['xdg-open', os.path.normpath(folder_path)], check=True)  # Open the folder in the default file manager (Linux)
+            except FileNotFoundError:
+                pass  # Ignore any exceptions if opening the folder fails
+
+# Creazione dell'interfaccia grafica
 window = tk.Tk()
-window.title("Ricerca Documenti Solr")
+window.title('Solr Document Search')
 
-# Creazione del campo di input per la ricerca
-entry = tk.Entry(window)
-entry.pack(pady=10)
+# Apply a themed style to the window
+style = ThemedStyle(window)
+style.set_theme('arc')  # Choose the desired theme (e.g., 'arc', 'scidgrey', 'radiance', 'yaru')
 
-# Creazione del pulsante di ricerca
-search_button = tk.Button(window, text="Cerca", command=search_documents)
-search_button.pack()
+# Aggiungi una tabella per i risultati
+result_listbox = ttk.Treeview(window, columns=('ID', 'Path'))
+result_listbox.heading('ID', text='Documenti')  # Modify the column heading
+result_listbox.heading('Path', text='Percorso')  # Modify the column heading
+result_listbox.grid(row=0, column=0, columnspan=2, sticky='nsew')
 
-# Creazione della lista per i risultati
-result_listbox = tk.Listbox(window)
-result_listbox.pack(pady=10)
+# Aggiungi un campo di testo per l'inserimento della query
+query_entry = ttk.Entry(window)
+query_entry.grid(row=1, column=0, padx=10, pady=5, sticky='we')
+query_entry.focus()
 
-# Aggiungi il bind del doppio clic sulla lista per aprire il documento
-result_listbox.bind('<Double-Button-1>', open_document)
+# Aggiungi la gestione dell'evento di modifica del campo di ricerca
+query_entry.bind('<KeyRelease>', search_documents)
 
-# Mappatura dei documenti (titolo -> URL)
-documents = {}
+# Aggiungi la gestione dell'evento di doppio clic per aprire il file
+result_listbox.bind('<<TreeviewSelect>>', open_file)
 
-# Funzione per indicizzare i documenti nel filesystem
-def index_documents():
-    folder_path = entry.get()  # Ottieni il percorso della cartella dai dati di input
-    documents.clear()  # Pulisci la mappa dei documenti
+# Configura il layout responsive
+window.columnconfigure(0, weight=1)
+window.columnconfigure(1, weight=1)
+window.rowconfigure(0, weight=1)
+window.rowconfigure(1, weight=0)
 
-    # Recupera tutti i file all'interno della directory
-    for root, dirs, files in os.walk(folder_path):
-        for file in files:
-            file_path = os.path.join(root, file)
-            document_title = file  # Utilizza il nome del file come titolo
-            documents[document_title] = file_path
-
-# Creazione del pulsante per l'indicizzazione dei documenti
-index_button = tk.Button(window, text="Indicizza Documenti", command=index_documents)
-index_button.pack()
-
-# Avvio del loop di eventi dell'interfaccia grafica
 window.mainloop()

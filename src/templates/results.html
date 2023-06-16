@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Search Results</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        caption {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        a {
+            color: #4CAF50;
+        }
+
+        form {
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Search Results</h1>
+    <table>
+        <caption>Search Results</caption>
+        <tr>
+            <th>ID</th>
+            <th>Action</th>
+        </tr>
+        {% for result in results %}
+        <tr>
+            <td>{{ result.filename }}</td>
+            <td><a href="{{ url_for('view_file', path=result.path) }}" target="_blank">Open</a></td>
+        </tr>
+        {% endfor %}
+    </table>
+    <form action="{{ url_for('search_documents') }}" method="POST">
+        <a href="{{ url_for('index') }}">Home</a>
+    </form>
+</body>
+<script>
+    // Ottieni tutti gli elementi <td> con attributo data-path
+    var fileCells = document.querySelectorAll("td[data-path]");
+
+    // Aggiungi il gestore di eventi click a ciascun elemento <td>
+    fileCells.forEach(function (cell) {
+        cell.addEventListener("click", function () {
+            var path = this.getAttribute("data-path");
+            openFile(path);
+        });
+    });
+
+    // Funzione per aprire il file
+    function openFile(path) {
+        var url = "/open_file?path=" + encodeURIComponent(path);
+        window.open(url, "_blank");
+    }
+</script>
+</html>

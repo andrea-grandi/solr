@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        
+        .messages {
+            list-style-type: none;
+            padding: 0;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .messages li {
+            color: #ff0000;
+            margin-bottom: 5px;
+        }
+        
+        form {
+            max-width: 300px;
+            margin: 0 auto;
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        form div {
+            margin-bottom: 10px;
+        }
+        
+        form label {
+            font-weight: bold;
+        }
+        
+        form input[type="text"],
+        form input[type="password"],
+        form input[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        form input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Login</h1>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+    <form method="POST" action="{{ url_for('login') }}">
+        {{ form.hidden_tag() }}
+        <div>
+            <label for="username">Username:</label>
+            {{ form.username() }}
+        </div>
+        <div>
+            <label for="password">Password:</label>
+            {{ form.password() }}
+        </div>
+        <div>
+            {{ form.remember_me() }} <label for="remember_me">Remember me</label>
+        </div>
+        <div>
+            <input type="submit" value="Login">
+        </div>
+    </form>
+</body>
+</html>
