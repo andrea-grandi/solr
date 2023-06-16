@@ -16,7 +16,7 @@ app.config['SECRET_KEY'] = 'password'
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)  # Imposta il tempo di scadenza a 1 minuto
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=10)  # Imposta il tempo di scadenza a 1 minuto
 
 class User(UserMixin):
     def __init__(self, username):
@@ -109,7 +109,10 @@ def search_documents():
 @login_required
 def view_file():
     path = request.args.get('path')
-    return send_file(path, as_attachment=False)
+    try:
+        return send_file(path, as_attachment=False)
+    except FileNotFoundError:
+        return render_template('exceptions.html', error_message='File not found: il file potrebbe essere stato eliminato dalla cartella ma non ancora da solr')
 
 # Funzione per aprire un file
 @app.route('/open_file', methods=['GET'])

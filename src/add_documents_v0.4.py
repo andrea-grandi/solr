@@ -25,6 +25,7 @@ def load_documents(file_paths):
         # Aggiungi il documento alla lista dei documenti indicizzati
         indexed_documents.append(file_path)
 
+"""
 # Funzione per eliminare un documento da Solr
 def delete_document(doc_id):
     delete_url = f"{solr_url}/{solr_core}/update?commit=true"
@@ -37,6 +38,23 @@ def delete_document(doc_id):
         indexed_documents.remove(doc_id)
     else:
         print(f"Errore durante l'eliminazione del documento con ID {doc_id} da Solr")
+"""
+
+# Funzione per eliminare un documento da Solr
+def delete_document(doc_id):
+    if doc_id in indexed_documents:
+        delete_url = f"{solr_url}/{solr_core}/update?commit=true"
+        delete_data = f'<delete><query>id:"{doc_id}"</query></delete>'
+        headers = {'Content-Type': 'application/xml'}
+        response = requests.post(delete_url, data=delete_data, headers=headers)
+        if response.status_code == 200:
+            print(f"Documento con ID {doc_id} eliminato da Solr")
+            # Rimuovi il documento dalla lista dei documenti indicizzati
+            indexed_documents.remove(doc_id)
+        else:
+            print(f"Errore durante l'eliminazione del documento con ID {doc_id} da Solr")
+    else:
+        print(f"Il documento con ID {doc_id} non è presente nell'elenco dei documenti indicizzati")
 
 # Loop principale
 while True:
@@ -74,5 +92,8 @@ while True:
         for doc_id in documents_to_delete:
             delete_document(doc_id)
 
-    # Attendi un monuto prima di eseguire nuovamente il controllo
+    # Attendi un minuto prima di eseguire nuovamente il controllo
     time.sleep(60)
+
+
+
