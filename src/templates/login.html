@@ -60,6 +60,11 @@
             color: white;
             cursor: pointer;
         }
+        form input.input-field {    
+            width: 100%;
+            box-sizing: border-box;
+            max-width: 250px; /* Regola questa larghezza come preferisci */
+        }
     </style>
 </head>
 <body>
@@ -77,11 +82,11 @@
         {{ form.hidden_tag() }}
         <div>
             <label for="username">Username:</label>
-            {{ form.username() }}
+            {{ form.username(class_="input-field") }} <!-- Aggiungi la classe "input-field" -->
         </div>
         <div>
             <label for="password">Password:</label>
-            {{ form.password() }}
+            {{ form.password(class_="input-field") }} <!-- Aggiungi la classe "input-field" -->
         </div>
         <div>
             {{ form.remember_me() }} <label for="remember_me">Remember me</label>
