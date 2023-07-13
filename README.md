@@ -1,2 +1,0 @@
-# solr
-Apache Solr project 
