@@ -1,3 +1,0 @@
-ciao
-file di prova per solr
-andrea
